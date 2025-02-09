@@ -1,0 +1,21 @@
+review_id,user_id,pharmacy_id,rating,comment,review_date
+1,6,9,4,Good service,2024-05-06
+2,4,1,5,Average experience,2024-11-17
+3,2,2,2,Good service,2024-06-02
+4,7,2,1,Average experience,2024-03-28
+5,10,10,3,Good service,2024-03-30
+6,3,5,5,Average experience,2024-04-11
+7,6,4,1,Good service,2024-02-03
+8,8,4,1,Average experience,2024-05-08
+9,10,9,4,Good service,2024-02-07
+10,3,10,3,Average experience,2024-12-05
+11,4,2,1,Good service,2024-06-28
+12,4,9,5,Average experience,2024-07-15
+13,7,6,5,Good service,2024-02-21
+14,6,8,4,Average experience,2024-01-11
+15,7,2,1,Good service,2024-06-08
+16,10,10,2,Average experience,2024-05-12
+17,8,5,5,Good service,2024-12-14
+18,4,5,1,Average experience,2024-12-20
+19,1,7,4,Good service,2024-01-13
+20,7,9,1,Average experience,2024-06-02

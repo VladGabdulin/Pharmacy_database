@@ -1,0 +1,11 @@
+medicine_id,manufacturer,quantity_per_package,name,readings,contraindication
+1,Manufacturer 1,10,Medicine 1,Pain relief,None
+2,Manufacturer 2,30,Medicine 2,Immunity boost,Liver disease
+3,Manufacturer 3,20,Medicine 3,Blood thinner,Stomach issues
+4,Manufacturer 4,30,Medicine 4,Bacterial infection,Ulcers
+5,Manufacturer 5,30,Medicine 5,Diabetes,Allergy to penicillin
+6,Manufacturer 6,10,Medicine 6,Allergy relief,Kidney issues
+7,Manufacturer 7,10,Medicine 7,Acidity,High acidity
+8,Manufacturer 8,30,Medicine 8,Multivitamin,None
+9,Manufacturer 9,20,Medicine 9,Antifungal,Allergy
+10,Manufacturer 10,20,Medicine 10,Vitamin,None
