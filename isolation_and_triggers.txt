@@ -1,0 +1,144 @@
+READ UNCOMMITED, проверка грязных чтений
+
+1) 
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+BEGIN;
+UPDATE stock SET price = price + 100 WHERE stock_id = 1;
+-- Транзакция еще не зафиксирована.
+
+2) 
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+BEGIN;
+select * from stock order by stock_id
+
+1)
+commit;
+
+2) 
+select * from stock order by stock_id
+
+во время первого селекта данные не были изменены незавершившейся транзакцией 1 сеанса, когда транзакция завершилась, данные изменились. То есть, грязных чтений нет
+
+
+READ UNCOMMITED, проверка потерянных изменений
+1) 
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+BEGIN;
+UPDATE stock SET price = price + 100 WHERE stock_id = 1;
+
+2) 
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+BEGIN;
+UPDATE stock SET price = price - 50 WHERE stock_id = 1;
+COMMIT;
+
+1) 
+COMMIT;
+
+Потерянных изменений нет
+
+READ COMMITED, проверка грязных чтений
+аналогично READ UNCOMMITED
+
+READ COMMITED, проверка неповторяющихся чтений
+
+1)
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+BEGIN;
+SELECT price FROM stock WHERE stock_id = 1;
+
+2)
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+BEGIN;
+UPDATE stock SET price = price - 50 WHERE stock_id = 1;
+COMMIT;
+
+1) 
+SELECT price FROM stock WHERE stock_id = 1;
+
+данные изменились между двумя чтениями транзакцией, которая завершилась после первого чтения, то есть неповторяющиеся чтения есть
+
+
+REPEATABLE READ, проверка неповторяющихся чтений
+аналогично предыдущему, но неповторяющихся чтений нет
+
+REPEATABLE READ, проверка фантомных чтений
+
+1)
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN;
+SELECT COUNT(*) FROM stock;
+
+2) 
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN;
+DELETE FROM stock WHERE stock_id = 37;
+COMMIT;
+
+1) 
+повторить чтение - данные не изменились, фантомных чтений нет
+
+
+SERIALIZABLE, проверка фантомных чтений
+аналогично предыдущему, фантомных чтений так же нет
+
+
+
+
+
+
+ТРИГГЕР
+
+CREATE OR REPLACE FUNCTION check_and_update_stock_quantity()
+RETURNS TRIGGER AS $$
+DECLARE
+    available_quantity INTEGER;
+BEGIN
+    -- Получаем текущее количество лекарства на складе
+    SELECT quantity INTO available_quantity
+    FROM Stock
+    WHERE stock_id = NEW.stock_id;
+
+    -- Проверяем, что количество проданного товара не превышает доступного
+    IF NEW.quantity_sold > available_quantity THEN
+        RAISE EXCEPTION 'Недостаточное количество лекарства на складе для продажи (stock_id: %)', NEW.stock_id;
+    END IF;
+
+    -- Уменьшаем количество лекарства в таблице Stock
+    UPDATE Stock
+    SET quantity = quantity - NEW.quantity_sold
+    WHERE stock_id = NEW.stock_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+СОЗДАНИЕ ТРИГГЕРА 
+
+-- Создание триггера, который вызывает функцию check_and_update_stock_quantity
+CREATE TRIGGER trigger_check_and_update_stock
+BEFORE INSERT ON Sales
+FOR EACH ROW
+EXECUTE FUNCTION check_and_update_stock_quantity();
+
+
+
+ПРОВЕРКА РАБОТЫ
+
+-- Убедимся, что в таблице Stock есть данные
+INSERT INTO Stock (stock_id, pharmacy_id, medicine_id, date, price, quantity, expiration_date)
+VALUES (38, 1, 1, '2024-11-01', 100.00, 50, '2025-12-31');
+
+-- Добавляем запись о продаже, которая успешно обновит количество
+INSERT INTO Sales (sale_id, stock_id, order_id, quantity_sold)
+VALUES (22, 38, 1, 5);
+
+-- Проверяем изменения в таблице Stock
+SELECT * FROM Stock WHERE stock_id = 38;
+
+-- Пытаемся продать больше, чем есть в наличии
+INSERT INTO Sales (stock_id, order_id, quantity_sold)
+VALUES (38, 102, 100);
+
